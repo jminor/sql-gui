@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #include <stdio.h>
 #include <SDL.h>
+#include <sqlite3.h>
 
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
@@ -32,6 +33,16 @@ using namespace gl;
 #else
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
+
+static int db_callback(void *NotUsed, int argc, char **argv, char **azColName)
+{
+    int i;
+    for(i=0; i<argc; i++) {
+        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
+    }
+    printf("\n");
+    return 0;
+}
 
 // Main code
 int main(int, char**)
@@ -130,6 +141,24 @@ int main(int, char**)
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
+    const char* db_path = "sql-murder-mystery.db";
+    const char* query = "select * from person;";
+    char *err_msg = NULL;
+    sqlite3 *db;
+    int rc;
+    rc = sqlite3_open(db_path, &db);
+    if (rc) {
+        fprintf(stderr, "Failed to open database %s: %s", db_path, sqlite3_errmsg(db));
+        sqlite3_close(db);
+        exit(1);
+    }
+    rc = sqlite3_exec(db, query, db_callback, 0, &err_msg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "SQL error: %s\n", err_msg);
+        sqlite3_free(err_msg);
+    }
+    sqlite3_close(db);
 
     // Main loop
     bool done = false;

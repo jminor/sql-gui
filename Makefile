@@ -18,10 +18,11 @@ EXE = sql-gui
 SOURCES = main.cpp
 SOURCES += imgui/examples/imgui_impl_sdl.cpp imgui/examples/imgui_impl_opengl3.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp imgui/imgui_tables.cpp
+SOURCES += sqlite/sqlite3.c
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -Iimgui/examples/ -Iimgui/ -Iimgui/backends
+CXXFLAGS = -Iimgui/examples/ -Iimgui/ -Iimgui/backends -Isqlite
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
@@ -98,6 +99,9 @@ endif
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o:imgui/examples/libs/glad/src/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o:sqlite/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 all: $(EXE)
