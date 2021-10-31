@@ -1,3 +1,4 @@
 *.o
 sql-gui
+sql-gui.sublime-workspace
 imgui.ini
