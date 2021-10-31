@@ -1,0 +1,3 @@
+*.o
+sql-gui
+imgui.ini
