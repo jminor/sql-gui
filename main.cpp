@@ -115,27 +115,35 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_EnablePowerSavingMode;
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsLight();
     //ImGui::StyleColorsClassic();
+
+    ImGuiStyle& style = ImGui::GetStyle();
+    style.WindowPadding = ImVec2(10,10);
+    style.FramePadding = ImVec2(10,4);
+    style.CellPadding = ImVec2(8,4);
+    style.ItemSpacing = ImVec2(8,4);
+    style.ItemInnerSpacing = ImVec2(4,4);
+    style.ScrollbarSize = 20;
+    style.GrabMinSize = 20;
+    style.WindowBorderSize = 1;
+    style.ChildBorderSize = 1;
+    style.PopupBorderSize = 1;
+    style.FrameBorderSize = 1;
+    style.TabBorderSize = 0;
+    style.WindowRounding = 5;
+    style.ChildRounding = 5;
+    style.FrameRounding = 3;
+    style.ScrollbarRounding = 4;
+    style.GrabRounding = 4;
+    style.TabRounding = 4;
 
     // Setup Platform/Renderer bindings
     ImGui_ImplSDL2_InitForOpenGL(window, gl_context);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Load Fonts
-    // - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them.
-    // - AddFontFromFileTTF() will return the ImFont* so you can store it if you need to select the font among multiple.
-    // - If the file cannot be loaded, the function will return NULL. Please handle those errors in your application (e.g. use an assertion, or display an error and quit).
-    // - The fonts will be rasterized at a given size (w/ oversampling) and stored into a texture when calling ImFontAtlas::Build()/GetTexDataAsXXXX(), which ImGui_ImplXXXX_NewFrame below will call.
-    // - Read 'docs/FONTS.txt' for more instructions and details.
-    // - Remember that in C/C++ if you want to include a backslash \ in a string literal you need to write a double backslash \\ !
     //io.Fonts->AddFontDefault();
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Roboto-Medium.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/Cousine-Regular.ttf", 15.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/DroidSans.ttf", 16.0f);
-    //io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
-    //ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
-    //IM_ASSERT(font != NULL);
+    io.Fonts->AddFontFromFileTTF("fonts/NotoSansMono-Regular.ttf", 16.0f);
 
     // Our state
     bool show_demo_window = true;
@@ -192,12 +200,15 @@ int main(int, char**)
 
             if (ImGui::GetFrameCount()==1) do_query = true;
 
+            ImGui::SetNextWindowPos(ImVec2(0,0), ImGuiCond_Always);
+            ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
             ImGui::Begin("Database");
 
             if (ImGui::InputText("SQL", query, sizeof(query))) {
                 do_query = true;
             }
-            if (ImGui::Button("Run")) {
+            ImGui::SameLine();
+            if (ImGui::Button("Run Query")) {
                 do_query = true;
             }
 
