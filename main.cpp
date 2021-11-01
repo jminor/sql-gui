@@ -218,38 +218,35 @@ int main(int, char**)
                     err_msg = NULL;
                 }
 
-                if (result) {
-                    sqlite3_free_table(result);
-                    result = NULL;
-                }
-
-                // rc = sqlite3_exec(db, query, db_callback, 0, &err_msg);
-                // if (rc != SQLITE_OK) {
-                //     fprintf(stderr, "SQL error: %s\n", err_msg);
-                // }
-
+                char **new_result = NULL;
+                int new_rows = 0;
+                int new_cols = 0;
                 rc = sqlite3_get_table(
                     db,
                     query,
-                    &result,
-                    &result_rows,
-                    &result_cols,
+                    &new_result,
+                    &new_rows,
+                    &new_cols,
                     &err_msg
                     );
                 if (rc != SQLITE_OK) {
                     fprintf(stderr, "SQL error: %s\n", err_msg);
+                    if (new_result) {
+                        sqlite3_free_table(new_result);
+                    }
+                }else if (new_cols<1 || new_cols>64) {
+                    fprintf(stderr, "Error %d rows %d columns\n", new_rows, new_cols);
+                    if (new_result) {
+                        sqlite3_free_table(new_result);
+                    }
+                }else{
                     if (result) {
                         sqlite3_free_table(result);
                         result = NULL;
                     }
-                }else{
-                    if (result_cols<1 || result_cols>64) {
-                        fprintf(stderr, "Error %d rows %d columns\n", result_rows, result_cols);
-                        if (result) {
-                            sqlite3_free_table(result);
-                            result = NULL;
-                        }
-                    }
+                    result = new_result;
+                    result_rows = new_rows;
+                    result_cols = new_cols;
                 }
             }
 
