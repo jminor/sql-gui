@@ -139,11 +139,9 @@ int main(int, char**)
 
     // Our state
     bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     const char* db_path = "sql-murder-mystery.db";
-    const char* query = "select * from person;";
     char *err_msg = NULL;
     sqlite3 *db;
     int rc;
@@ -153,12 +151,13 @@ int main(int, char**)
         sqlite3_close(db);
         exit(1);
     }
-    rc = sqlite3_exec(db, query, db_callback, 0, &err_msg);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "SQL error: %s\n", err_msg);
-        sqlite3_free(err_msg);
-    }
-    sqlite3_close(db);
+
+    char query[1024];
+    char **result = NULL;
+    int result_rows = 0;
+    int result_cols = 0;
+
+    snprintf(query, sizeof(query), "select * from person");
 
     // Main loop
     bool done = false;
@@ -185,41 +184,104 @@ int main(int, char**)
         ImGui_ImplSDL2_NewFrame(window);
         ImGui::NewFrame();
 
-        // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
             ImGui::ShowDemoWindow(&show_demo_window);
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            static float f = 0.0f;
-            static int counter = 0;
+            bool do_query = false;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            if (ImGui::GetFrameCount()==1) do_query = true;
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Begin("Database");
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            if (ImGui::InputText("SQL", query, sizeof(query))) {
+                do_query = true;
+            }
+            if (ImGui::Button("Run")) {
+                do_query = true;
+            }
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            if (do_query) {
+                if (err_msg) {
+                    sqlite3_free(err_msg);
+                    err_msg = NULL;
+                }
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::Text("Frames since last input: %d", ImGui::GetIO().FrameCountSinceLastInput);
-            ImGui::End();
-        }
+                if (result) {
+                    sqlite3_free_table(result);
+                    result = NULL;
+                }
 
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
+                // rc = sqlite3_exec(db, query, db_callback, 0, &err_msg);
+                // if (rc != SQLITE_OK) {
+                //     fprintf(stderr, "SQL error: %s\n", err_msg);
+                // }
+
+                rc = sqlite3_get_table(
+                    db,
+                    query,
+                    &result,
+                    &result_rows,
+                    &result_cols,
+                    &err_msg
+                    );
+                if (rc != SQLITE_OK) {
+                    fprintf(stderr, "SQL error: %s\n", err_msg);
+                    if (result) {
+                        sqlite3_free_table(result);
+                        result = NULL;
+                    }
+                }else{
+                    if (result_cols<1 || result_cols>64) {
+                        fprintf(stderr, "Error %d rows %d columns\n", result_rows, result_cols);
+                        if (result) {
+                            sqlite3_free_table(result);
+                            result = NULL;
+                        }
+                    }
+                }
+            }
+
+            if (err_msg) {
+                ImGui::Text("%s", err_msg);
+            }
+
+            if (result) {
+                ImGui::Text("Result %d rows, %d cols", result_rows, result_cols);
+
+                ImGuiTableFlags flags = 0
+                    | ImGuiTableFlags_Borders
+                    | ImGuiTableFlags_RowBg
+                    | ImGuiTableFlags_Resizable
+                    // | ImGuiTableFlags_Sortable  // we would have to sort the data ourselves
+                     | ImGuiTableFlags_ScrollY
+                    ;
+
+                if (ImGui::BeginTable("Result", result_cols, flags)) {
+
+                    for (int col=0; col<result_cols; col++) {
+                        ImGui::TableSetupColumn(result[col]);
+                    }
+                    ImGui::TableSetupScrollFreeze(0, 1);
+                    ImGui::TableHeadersRow();
+
+                    for (int row=0; row<result_rows; row++) {
+                        ImGui::TableNextRow();
+                        for (int col=0; col<result_cols; col++) {
+                            ImGui::TableSetColumnIndex(col);
+                            const char *text = result[(row+1)*result_cols+col];
+                            if (text == NULL) {
+                                ImGui::TextDisabled("<NULL>");
+                            }else{
+                                ImGui::TextUnformatted(text);
+                            }
+                        }
+                    }
+
+                    ImGui::EndTable();
+                }
+            }
+
             ImGui::End();
         }
 
@@ -231,6 +293,8 @@ int main(int, char**)
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
+
+    sqlite3_close(db);
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
