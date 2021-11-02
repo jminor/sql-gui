@@ -1,25 +1,20 @@
+# SQL-GUI - a SQLite database query tool
 
-# How to Build
+![screenshot](screenshot.png)
 
-- On Windows with Visual Studio's CLI
+## Building
 
-```
-set SDL2_DIR=path_to_your_sdl2_folder
-cl /Zi /MD /Iimgui\examples /Iimgui /I%SDL2_DIR%\include /Iimgui\examples\libs\gl3w main.cpp imgui\examples\imgui_impl_sdl.cpp imgui\examples\imgui_impl_opengl3.cpp imgui\imgui*.cpp imgui\examples\libs\gl3w\GL\gl3w.c /FeDebug/sql-gui.exe /FoDebug/ /link /libpath:%SDL2_DIR%\lib\x86 SDL2.lib SDL2main.lib opengl32.lib /subsystem:console
-#          ^^ include paths                                 ^^ source files                                                                                  ^^ output exe                    ^^ output dir   ^^ libraries
-# or for 64-bit:
-cl /Zi /MD /Iimgui\examples /Iimgui /I%SDL2_DIR%\include /Iimgui\examples\libs\gl3w main.cpp imgui\examples\imgui_impl_sdl.cpp imgui\examples\imgui_impl_opengl3.cpp imgui\imgui*.cpp imgui\examples\libs\gl3w\GL\gl3w.c /FeDebug/sql-gui.exe /FoDebug/ /link /libpath:%SDL2_DIR%\lib\x64 SDL2.lib SDL2main.lib opengl32.lib /subsystem:console
-```
+	% make
 
-- On Linux and similar Unixes
+## Running
 
-```
-c++ `sdl2-config --cflags` -I imgui/examples -I imgui -I imgui/examples/libs/gl3w main.cpp imgui/examples/imgui_impl_sdl.cpp imgui/examples/imgui_impl_opengl3.cpp imgui/imgui*.cpp imgui/examples/libs/gl3w/GL/gl3w.c `sdl2-config --libs` -lGL -ldl
-```
+	% ./sql-gui [database] [sql]
 
-- On Mac OS X
+You can use the included sample database like this:
 
-```
-brew install sdl2
-c++ `sdl2-config --cflags` -I imgui/examples -I imgui -I imgui/examples/libs/gl3w main.cpp imgui/examples/imgui_impl_sdl.cpp imgui/examples/imgui_impl_opengl3.cpp imgui/imgui*.cpp imgui/examples/libs/gl3w/GL/gl3w.c `sdl2-config --libs` -framework OpenGl -framework CoreFoundation
-```
+	% ./sql-gui sql-murder-mystery.db "select * from person"
+
+## Thanks
+
+Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui), and [SQLite](https://www.sqlite.org/). The sample database is from the amazing [SQL Murder Mystery](https://github.com/NUKnightLab/sql-mysteries).
+
