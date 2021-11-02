@@ -34,18 +34,8 @@ using namespace gl;
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
-static int db_callback(void *NotUsed, int argc, char **argv, char **azColName)
-{
-    int i;
-    for(i=0; i<argc; i++) {
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
-
 // Main code
-int main(int, char**)
+int main(int argc, char**argv)
 {
     // Setup SDL
     // (Some versions of SDL before <2.0.10 appears to have performance/stalling issues on a minority of Windows systems,
@@ -149,7 +139,7 @@ int main(int, char**)
     bool show_demo_window = true;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-    const char* db_path = "sql-murder-mystery.db";
+    const char* db_path = argc>1 ? argv[1] : "";
     char *err_msg = NULL;
     sqlite3 *db;
     int rc;
@@ -166,7 +156,7 @@ int main(int, char**)
     int result_cols = 0;
     bool do_query_continuously = true;
 
-    snprintf(query, sizeof(query), "select * from person");
+    snprintf(query, sizeof(query), "%s", argc>2 ? argv[2] : "select * from sqlite_master");
 
     // Main loop
     bool done = false;
