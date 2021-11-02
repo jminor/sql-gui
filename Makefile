@@ -22,7 +22,7 @@ SOURCES += sqlite/sqlite3.c
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -Iimgui/examples/ -Iimgui/ -Iimgui/backends -Isqlite
+CXXFLAGS = -I./imgui/examples/ -I./imgui/ -I./imgui/backends -I./sqlite
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
