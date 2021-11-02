@@ -58,6 +58,16 @@ jobs:
 
     - name: Install Dependencies
       run: |
+        echo BEFORE
+        ls -l
+        ls -l imgui
+        git submodule update
+        echo AFTER
+        ls -l
+        ls -l imgui
+
+    - name: Install Dependencies
+      run: |
         sudo apt-get update
         sudo apt-get install -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev
 
@@ -77,7 +87,11 @@ jobs:
 
     - name: Build Mac
       run: |
+        echo A
+        ls -l
+        echo B
         ls -l imgui
+        echo C
         make
         ls -l
 
