@@ -55,7 +55,7 @@ CXXFLAGS += -Iimgui/examples/libs/gl3w -DIMGUI_IMPL_OPENGL_LOADER_GL3W
 
 ifeq ($(UNAME_S), Linux) #LINUX
 	ECHO_MESSAGE = "Linux"
-	LIBS += -lGL -ldl `sdl2-config --libs` -lpthreads
+	LIBS += -lGL -ldl `sdl2-config --libs` -lpthread
 
 	CXXFLAGS += `sdl2-config --cflags`
 	CFLAGS = $(CXXFLAGS)
