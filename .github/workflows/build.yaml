@@ -14,6 +14,8 @@ jobs:
       MSBUILD_PATH: C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\MSBuild\Current\Bin\
     steps:
       - uses: actions/checkout@v2
+        with: 
+          submodules: recursive 
 
       - name: Install Dependencies
         shell: powershell
@@ -55,22 +57,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-
-    - name: Install Dependencies
-      run: |
-        echo BEFORE
-        ls -l
-        pushd imgui
-        pwd
-        ls -l
-        popd
-        git submodule update
-        echo AFTER
-        ls -l
-        pushd imgui
-        pwd
-        ls -l
-        popd
+      with: 
+        submodules: recursive 
 
     - name: Install Dependencies
       run: |
@@ -81,6 +69,18 @@ jobs:
       run: |
         make
         ls -l
+
+    - name: Package Product
+      run: |
+        chmod +x sql-gui
+        zip -r sql-gui-linux.zip sql-gui fonts
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v1
+      with:
+        name: sql-gui-linux.zip
+        path: sql-gui-linux.zip
+
 
   MacOS:
     runs-on: macos-latest
@@ -95,13 +95,19 @@ jobs:
 
     - name: Build Mac
       run: |
-        echo A
-        ls -l
-        echo B
-        ls -l imgui
-        echo C
         make
         ls -l
+
+    - name: Package Product
+      run: |
+        chmod +x sql-gui
+        zip -r sql-gui-mac.zip sql-gui fonts
+
+    - name: Archive Product
+      uses: actions/upload-artifact@v1
+      with:
+        name: sql-gui-mac.zip
+        path: sql-gui-mac.zip
 
   Emscripten:
     runs-on: ubuntu-18.04
@@ -112,6 +118,8 @@ jobs:
 
     - name: Install Dependencies
       run: |
+        sudo apt-get update
+        sudo apt-get install -y libglfw3-dev libsdl2-dev gcc-multilib g++-multilib libfreetype6-dev
         wget -q https://github.com/emscripten-core/emsdk/archive/master.tar.gz
         tar -xvf master.tar.gz
         emsdk-master/emsdk update
