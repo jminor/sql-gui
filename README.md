@@ -16,5 +16,5 @@ You can use the included sample database like this:
 
 ## Thanks
 
-Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui), and [SQLite](https://www.sqlite.org/). The sample database is from the amazing [SQL Murder Mystery](https://github.com/NUKnightLab/sql-mysteries).
+Made with the excellent [Dear ImGui](https://github.com/ocornut/imgui) (MIT License), and [SQLite](https://www.sqlite.org/) (Public Domain). The sample database is from the amazing [SQL Murder Mystery](https://github.com/NUKnightLab/sql-mysteries) (MIT License).
 
