@@ -243,8 +243,8 @@ int main(int, char**)
                     if (new_result) {
                         sqlite3_free_table(new_result);
                     }
-                }else if (new_cols<1 || new_cols>64) {
-                    fprintf(stderr, "Error %d rows %d columns\n", new_rows, new_cols);
+                }else if (new_cols>64) {
+                    fprintf(stderr, "Error %d > 64 columns\n", new_cols);
                     if (new_result) {
                         sqlite3_free_table(new_result);
                     }
@@ -274,7 +274,7 @@ int main(int, char**)
                      | ImGuiTableFlags_ScrollY
                     ;
 
-                if (ImGui::BeginTable("Result", result_cols, flags)) {
+                if (result_cols>0 && ImGui::BeginTable("Result", result_cols, flags)) {
 
                     for (int col=0; col<result_cols; col++) {
                         ImGui::TableSetupColumn(result[col]);
