@@ -164,6 +164,7 @@ int main(int, char**)
     char **result = NULL;
     int result_rows = 0;
     int result_cols = 0;
+    bool do_query_continuously = true;
 
     snprintf(query, sizeof(query), "select * from person");
 
@@ -204,12 +205,20 @@ int main(int, char**)
             ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
             ImGui::Begin("Database");
 
-            if (ImGui::InputText("SQL", query, sizeof(query))) {
+            ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
+            if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
                 do_query = true;
             }
+            if (ImGui::IsItemDeactivatedAfterEdit()) {
+                ImGui::SetKeyboardFocusHere(-1);
+            }
             ImGui::SameLine();
-            if (ImGui::Button("Run Query")) {
-                do_query = true;
+            ImGui::Checkbox("Automatic", &do_query_continuously);
+            if (!do_query_continuously) {
+                ImGui::SameLine();
+                if (ImGui::Button("Run Query")) {
+                    do_query = true;
+                }
             }
 
             if (do_query) {
