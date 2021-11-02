@@ -60,11 +60,17 @@ jobs:
       run: |
         echo BEFORE
         ls -l
-        ls -l imgui
+        pushd imgui
+        pwd
+        ls -l
+        popd
         git submodule update
         echo AFTER
         ls -l
-        ls -l imgui
+        pushd imgui
+        pwd
+        ls -l
+        popd
 
     - name: Install Dependencies
       run: |
@@ -80,6 +86,8 @@ jobs:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v2
+      with: 
+        submodules: recursive 
 
     - name: Install Dependencies
       run: |
@@ -99,6 +107,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+      with: 
+        submodules: recursive 
 
     - name: Install Dependencies
       run: |
