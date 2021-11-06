@@ -22,7 +22,7 @@ SOURCES += sqlite/sqlite3.c
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CXXFLAGS = -Iimgui/examples/ -Iimgui/ -Iimgui/backends -Isqlite
+CXXFLAGS = -I./imgui/examples/ -I./imgui/ -I./imgui/backends -I./sqlite
 CXXFLAGS += -g -Wall -Wformat
 LIBS =
 
@@ -55,7 +55,7 @@ CXXFLAGS += -Iimgui/examples/libs/gl3w -DIMGUI_IMPL_OPENGL_LOADER_GL3W
 
 ifeq ($(UNAME_S), Linux) #LINUX
 	ECHO_MESSAGE = "Linux"
-	LIBS += -lGL -ldl `sdl2-config --libs`
+	LIBS += -lGL -ldl `sdl2-config --libs` -lpthread
 
 	CXXFLAGS += `sdl2-config --cflags`
 	CFLAGS = $(CXXFLAGS)
