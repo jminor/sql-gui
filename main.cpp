@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <SDL.h>
 #include <sqlite3.h>
+#include "ImGuiColorTextEdit/TextEditor.h"
 
 // About Desktop OpenGL function loaders:
 //  Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
@@ -154,9 +155,20 @@ int main(int argc, char**argv)
     char **result = NULL;
     int result_rows = 0;
     int result_cols = 0;
-    bool do_query_continuously = true;
+    // bool do_query_continuously = true;
 
     snprintf(query, sizeof(query), "%s", argc>2 ? argv[2] : "select * from sqlite_master");
+
+    TextEditor editor;
+    auto lang = TextEditor::LanguageDefinition::SQL();
+    editor.SetLanguageDefinition(lang);
+    TextEditor::Palette palette = TextEditor::GetLightPalette();
+    // disable the current line highlight, by choosing transparent colors for it.
+    palette[(int)TextEditor::PaletteIndex::CurrentLineFill] = 0x00000000;
+    palette[(int)TextEditor::PaletteIndex::CurrentLineFillInactive] = 0x00000000;
+    palette[(int)TextEditor::PaletteIndex::CurrentLineEdge] = 0x00000000;
+    editor.SetPalette(palette);
+    editor.SetText(query);
 
     // Main loop
     bool done = false;
@@ -195,27 +207,64 @@ int main(int argc, char**argv)
             ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
             ImGui::Begin("Database");
 
-            ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
-            if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
+            // ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
+            // if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
+            //     do_query = true;
+            // }
+            // if (ImGui::IsItemDeactivatedAfterEdit()) {
+            //     ImGui::SetKeyboardFocusHere(-1);
+            // }
+            // ImGui::SameLine();
+
+            ImVec2 size(
+                ImGui::GetContentRegionAvail().x - 100,
+                ImGui::GetTextLineHeight() * 5
+                );
+            editor.Render("SQL", size, true);
+            ImVec2 bottom_corner = ImGui::GetItemRectMax();
+
+            ImGui::SameLine();
+            if (ImGui::Button("Run Query")) {
                 do_query = true;
             }
-            if (ImGui::IsItemDeactivatedAfterEdit()) {
-                ImGui::SetKeyboardFocusHere(-1);
+
+            editor.SetShowWhitespaces(true);
+            auto cpos = editor.GetCursorPosition();
+            auto selection = editor.GetSelectedText();
+            char info_text[1024];
+            if (selection.empty()) {
+                snprintf(info_text, sizeof(info_text),
+                    "line %d/%d, column %d | %s",
+                    cpos.mLine + 1,
+                    editor.GetTotalLines(),
+                    cpos.mColumn + 1,
+                    editor.IsOverwrite() ? "Ovr" : "Ins");
+            }else{
+                snprintf(info_text, sizeof(info_text),
+                    "selected %d characters | %s",
+                    (int)selection.length(),
+                    editor.IsOverwrite() ? "Ovr" : "Ins");
             }
-            ImGui::SameLine();
-            ImGui::Checkbox("Automatic", &do_query_continuously);
-            if (!do_query_continuously) {
-                ImGui::SameLine();
-                if (ImGui::Button("Run Query")) {
-                    do_query = true;
-                }
-            }
+
+            ImGui::SetCursorPosX(bottom_corner.x - ImGui::CalcTextSize(info_text).x);
+            ImGui::TextUnformatted(info_text);
+            ImGui::SetItemAllowOverlap();
+
+            // ImGui::Checkbox("Automatic", &do_query_continuously);
+            // if (!do_query_continuously) {
+            //     ImGui::SameLine();
+            //     if (ImGui::Button("Run Query")) {
+            //         do_query = true;
+            //     }
+            // }
 
             if (do_query) {
                 if (err_msg) {
                     sqlite3_free(err_msg);
                     err_msg = NULL;
                 }
+
+                snprintf(query, sizeof(query), "%s", editor.GetText().c_str());
 
                 char **new_result = NULL;
                 int new_rows = 0;

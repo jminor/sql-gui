@@ -18,6 +18,7 @@ EXE = sql-gui
 SOURCES = main.cpp
 SOURCES += imgui/examples/imgui_impl_sdl.cpp imgui/examples/imgui_impl_opengl3.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp imgui/imgui_tables.cpp
+SOURCES += ImGuiColorTextEdit/TextEditor.cpp
 SOURCES += sqlite/sqlite3.c
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
@@ -33,6 +34,7 @@ LIBS =
 ## Using OpenGL loader: gl3w [default]
 SOURCES += imgui/examples/libs/gl3w/GL/gl3w.c
 CXXFLAGS += -Iimgui/examples/libs/gl3w -DIMGUI_IMPL_OPENGL_LOADER_GL3W
+CXXFLAGS += -std=c++11
 
 ## Using OpenGL loader: glew
 ## (This assumes a system-wide installation)
@@ -84,6 +86,9 @@ endif
 ##---------------------------------------------------------------------
 
 %.o:%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+%.o:ImGuiColorTextEdit/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:imgui/examples/%.cpp
