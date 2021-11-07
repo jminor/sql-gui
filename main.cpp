@@ -224,7 +224,20 @@ int main(int argc, char**argv)
             ImVec2 bottom_corner = ImGui::GetItemRectMax();
 
             ImGui::SameLine();
-            if (ImGui::Button("Run Query")) {
+
+            if (ImGui::BeginChild("Query Buttons", ImVec2(100,100))) {
+                if (ImGui::Button("Run Query")) {
+                    do_query = true;
+                }
+                ImGui::Text("%s-Enter", io.ConfigMacOSXBehaviors ? "Cmd" : "Ctrl");
+            }
+            ImGui::EndChild();
+
+            ImGuiIO& io = ImGui::GetIO();
+            auto shift = io.KeyShift;
+            auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+            auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+            if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false)) {
                 do_query = true;
             }
 
