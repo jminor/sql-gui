@@ -412,6 +412,115 @@ int main(int argc, char**argv)
                     ImGui::EndTabItem();
                 }
 
+                if (ImGui::BeginTabItem("Records")) {
+
+                    char **result = NULL;
+                    int rows = 0;
+                    int cols = 0;
+
+                    // which tables exist?
+                    rc = sqlite3_get_table(
+                        db,
+                        "select name from sqlite_master where type='table'",
+                        &result,
+                        &rows,
+                        &cols,
+                        &err_msg
+                        );
+                    if (rc != SQLITE_OK) {
+                        fprintf(stderr, "SQL error: %s\n", err_msg);
+                        if (result) {
+                            sqlite3_free_table(result);
+                        }
+                    }else{
+
+                        // pick a table
+                        static int selected_table_index = 0;
+                        ImGui::Combo("Table", &selected_table_index, &result[1], rows);
+
+                        static char filter[1024];
+                        ImGui::InputText("Filter", filter, sizeof(filter));
+
+                        char q[256];
+                        const char *where = filter;
+                        if (!strlen(where)) {
+                            where = "1=1";
+                        }
+                        snprintf(q, sizeof(q), "select * from %s where %s", result[selected_table_index+1], where);
+
+                        // free the list of tables
+                        sqlite3_free_table(result);
+
+                        // query the full contents of the table
+                        rc = sqlite3_get_table(
+                            db,
+                            q,
+                            &result,
+                            &rows,
+                            &cols,
+                            &err_msg
+                            );
+                        if (rc != SQLITE_OK) {
+                            fprintf(stderr, "SQL error: %s\n", err_msg);
+                            if (result) {
+                                sqlite3_free_table(result);
+                            }
+                        }else{
+
+                            // Pick one record
+                            static int record_index = 1;
+                            if (record_index > rows) {
+                                record_index = 1;
+                            }
+
+                            ImGui::Text("Record %d of %d", record_index, rows);
+                            ImGui::SameLine();
+                            if (ImGui::Button("Prev")) {
+                                record_index--;
+                                if (record_index<1) record_index=rows;
+                            }
+                            ImGui::SameLine();
+                            if (ImGui::Button("Next")) {
+                                record_index++;
+                                if (record_index>rows) record_index=1;
+                            }
+                            ImGui::SameLine();
+                            ImGui::SliderInt("Record Index", &record_index, 1, rows);
+
+                            ImGuiTableFlags flags = 0
+                            | ImGuiTableFlags_Borders
+                            //ImGuiTableFlags_BordersOuter
+                            | ImGuiTableFlags_RowBg
+                            | ImGuiTableFlags_Resizable
+                        // | ImGuiTableFlags_Sortable  // we would have to sort the data ourselves
+                            | ImGuiTableFlags_ScrollY
+                            ;
+                            if (ImGui::BeginTable("Record", 2, flags))
+                            {
+                                for (int col=0; col<cols; col++) {
+                                    const char *column_name = result[col];
+                                    const char *value = result[record_index*cols+col];
+                                    
+                                    ImGui::TableNextRow();
+                                    
+                                    ImGui::TableSetColumnIndex(0);
+                                    ImGui::AlignTextToFramePadding();
+                                    ImGui::TextUnformatted(column_name);
+
+                                    ImGui::TableSetColumnIndex(1);
+                                    ImGui::AlignTextToFramePadding();
+                                    ImGui::TextUnformatted(value);
+                                }
+                                ImGui::EndTable();
+                            }
+
+                            sqlite3_free_table(result);
+                        }
+                    }
+
+
+                    ImGui::EndTabItem();
+                }
                 ImGui::EndTabBar();
             }
 
