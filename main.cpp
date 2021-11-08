@@ -35,6 +35,41 @@ using namespace gl;
 #include IMGUI_IMPL_OPENGL_LOADER_CUSTOM
 #endif
 
+void DisplayTable(char **result, int rows, int cols)
+{
+    ImGuiTableFlags flags = 0
+    | ImGuiTableFlags_Borders
+    | ImGuiTableFlags_RowBg
+    | ImGuiTableFlags_Resizable
+// | ImGuiTableFlags_Sortable  // we would have to sort the data ourselves
+    | ImGuiTableFlags_ScrollY
+    ;
+
+    if (cols>0 && ImGui::BeginTable("Result", cols, flags)) {
+
+        for (int col=0; col<cols; col++) {
+            ImGui::TableSetupColumn(result[col]);
+        }
+        ImGui::TableSetupScrollFreeze(0, 1);
+        ImGui::TableHeadersRow();
+
+        for (int row=0; row<rows; row++) {
+            ImGui::TableNextRow();
+            for (int col=0; col<cols; col++) {
+                ImGui::TableSetColumnIndex(col);
+                const char *text = result[(row+1)*cols+col];
+                if (text == NULL) {
+                    ImGui::TextDisabled("<NULL>");
+                }else{
+                    ImGui::TextUnformatted(text);
+                }
+            }
+        }
+
+        ImGui::EndTable();
+    }
+}
+
 // Main code
 int main(int argc, char**argv)
 {
@@ -207,148 +242,195 @@ int main(int argc, char**argv)
             ImGui::SetNextWindowSize(io.DisplaySize, ImGuiCond_Always);
             ImGui::Begin("Database");
 
-            // ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
-            // if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
-            //     do_query = true;
-            // }
-            // if (ImGui::IsItemDeactivatedAfterEdit()) {
-            //     ImGui::SetKeyboardFocusHere(-1);
-            // }
-            // ImGui::SameLine();
+            if (ImGui::BeginTabBar("##tabs", ImGuiTabBarFlags_None)) {
 
-            ImVec2 size(
-                ImGui::GetContentRegionAvail().x - 100,
-                ImGui::GetTextLineHeight() * 5
-                );
-            editor.Render("SQL", size, true);
-            ImVec2 bottom_corner = ImGui::GetItemRectMax();
+                if (ImGui::BeginTabItem("SQL")) {
 
-            ImGui::SameLine();
+                    // ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
+                    // if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
+                    //     do_query = true;
+                    // }
+                    // if (ImGui::IsItemDeactivatedAfterEdit()) {
+                    //     ImGui::SetKeyboardFocusHere(-1);
+                    // }
+                    // ImGui::SameLine();
 
-            if (ImGui::BeginChild("Query Buttons", ImVec2(100,100))) {
-                if (ImGui::Button("Run Query")) {
-                    do_query = true;
-                }
-                ImGui::Text("%s-Enter", io.ConfigMacOSXBehaviors ? "Cmd" : "Ctrl");
-            }
-            ImGui::EndChild();
+                    ImVec2 size(
+                        ImGui::GetContentRegionAvail().x - 100,
+                        ImGui::GetTextLineHeight() * 5
+                        );
+                    editor.Render("SQL", size, true);
+                    ImVec2 bottom_corner = ImGui::GetItemRectMax();
 
-            ImGuiIO& io = ImGui::GetIO();
-            auto shift = io.KeyShift;
-            auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
-            auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-            if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false)) {
-                do_query = true;
-            }
+                    ImGui::SameLine();
 
-            editor.SetShowWhitespaces(true);
-            auto cpos = editor.GetCursorPosition();
-            auto selection = editor.GetSelectedText();
-            char info_text[1024];
-            if (selection.empty()) {
-                snprintf(info_text, sizeof(info_text),
-                    "line %d/%d, column %d | %s",
-                    cpos.mLine + 1,
-                    editor.GetTotalLines(),
-                    cpos.mColumn + 1,
-                    editor.IsOverwrite() ? "Ovr" : "Ins");
-            }else{
-                snprintf(info_text, sizeof(info_text),
-                    "selected %d characters | %s",
-                    (int)selection.length(),
-                    editor.IsOverwrite() ? "Ovr" : "Ins");
-            }
-
-            ImGui::SetCursorPosX(bottom_corner.x - ImGui::CalcTextSize(info_text).x);
-            ImGui::TextUnformatted(info_text);
-            ImGui::SetItemAllowOverlap();
-
-            // ImGui::Checkbox("Automatic", &do_query_continuously);
-            // if (!do_query_continuously) {
-            //     ImGui::SameLine();
-            //     if (ImGui::Button("Run Query")) {
-            //         do_query = true;
-            //     }
-            // }
-
-            if (do_query) {
-                if (err_msg) {
-                    sqlite3_free(err_msg);
-                    err_msg = NULL;
-                }
-
-                snprintf(query, sizeof(query), "%s", editor.GetText().c_str());
-
-                char **new_result = NULL;
-                int new_rows = 0;
-                int new_cols = 0;
-                rc = sqlite3_get_table(
-                    db,
-                    query,
-                    &new_result,
-                    &new_rows,
-                    &new_cols,
-                    &err_msg
-                    );
-                if (rc != SQLITE_OK) {
-                    fprintf(stderr, "SQL error: %s\n", err_msg);
-                    if (new_result) {
-                        sqlite3_free_table(new_result);
+                    if (ImGui::BeginChild("Query Buttons", ImVec2(100,50))) {
+                        if (ImGui::Button("Run Query")) {
+                            do_query = true;
+                        }
+                        ImGui::Text("%s+Enter", io.ConfigMacOSXBehaviors ? "Cmd" : "Ctrl");
                     }
-                }else if (new_cols>64) {
-                    fprintf(stderr, "Error %d > 64 columns\n", new_cols);
-                    if (new_result) {
-                        sqlite3_free_table(new_result);
+                    ImGui::EndChild();
+
+                    ImGuiIO& io = ImGui::GetIO();
+                    auto shift = io.KeyShift;
+                    auto ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
+                    auto alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+                    if (ctrl && !shift && !alt && ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter), false)) {
+                        do_query = true;
                     }
-                }else{
-                    if (result) {
-                        sqlite3_free_table(result);
-                        result = NULL;
+
+                    editor.SetShowWhitespaces(true);
+                    auto cpos = editor.GetCursorPosition();
+                    auto selection = editor.GetSelectedText();
+                    char info_text[1024];
+                    if (selection.empty()) {
+                        snprintf(info_text, sizeof(info_text),
+                            "line %d/%d, column %d | %s",
+                            cpos.mLine + 1,
+                            editor.GetTotalLines(),
+                            cpos.mColumn + 1,
+                            editor.IsOverwrite() ? "Ovr" : "Ins");
+                    }else{
+                        snprintf(info_text, sizeof(info_text),
+                            "selected %d characters | %s",
+                            (int)selection.length(),
+                            editor.IsOverwrite() ? "Ovr" : "Ins");
                     }
-                    result = new_result;
-                    result_rows = new_rows;
-                    result_cols = new_cols;
-                }
-            }
 
-            if (err_msg) {
-                ImGui::Text("%s", err_msg);
-            }
+                    ImVec2 pos = ImGui::GetCursorPos();
+                    ImGui::SetCursorPosX(bottom_corner.x - ImGui::CalcTextSize(info_text).x);
+                    ImGui::TextUnformatted(info_text);
+                    // ImGui::SetItemAllowOverlap();
+                    ImGui::SetCursorPos(pos);
 
-            if (result) {
-                ImGui::Text("Result %d rows, %d cols", result_rows, result_cols);
+                    // ImGui::Checkbox("Automatic", &do_query_continuously);
+                    // if (!do_query_continuously) {
+                    //     ImGui::SameLine();
+                    //     if (ImGui::Button("Run Query")) {
+                    //         do_query = true;
+                    //     }
+                    // }
 
-                ImGuiTableFlags flags = 0
-                    | ImGuiTableFlags_Borders
-                    | ImGuiTableFlags_RowBg
-                    | ImGuiTableFlags_Resizable
-                    // | ImGuiTableFlags_Sortable  // we would have to sort the data ourselves
-                     | ImGuiTableFlags_ScrollY
-                    ;
+                    if (do_query) {
+                        if (err_msg) {
+                            sqlite3_free(err_msg);
+                            err_msg = NULL;
+                        }
 
-                if (result_cols>0 && ImGui::BeginTable("Result", result_cols, flags)) {
+                        snprintf(query, sizeof(query), "%s", editor.GetText().c_str());
 
-                    for (int col=0; col<result_cols; col++) {
-                        ImGui::TableSetupColumn(result[col]);
-                    }
-                    ImGui::TableSetupScrollFreeze(0, 1);
-                    ImGui::TableHeadersRow();
-
-                    for (int row=0; row<result_rows; row++) {
-                        ImGui::TableNextRow();
-                        for (int col=0; col<result_cols; col++) {
-                            ImGui::TableSetColumnIndex(col);
-                            const char *text = result[(row+1)*result_cols+col];
-                            if (text == NULL) {
-                                ImGui::TextDisabled("<NULL>");
-                            }else{
-                                ImGui::TextUnformatted(text);
+                        char **new_result = NULL;
+                        int new_rows = 0;
+                        int new_cols = 0;
+                        rc = sqlite3_get_table(
+                            db,
+                            query,
+                            &new_result,
+                            &new_rows,
+                            &new_cols,
+                            &err_msg
+                            );
+                        if (rc != SQLITE_OK) {
+                            fprintf(stderr, "SQL error: %s\n", err_msg);
+                            if (new_result) {
+                                sqlite3_free_table(new_result);
                             }
+                        }else if (new_cols>64) {
+                            fprintf(stderr, "Error %d > 64 columns\n", new_cols);
+                            if (new_result) {
+                                sqlite3_free_table(new_result);
+                            }
+                        }else{
+                            if (result) {
+                                sqlite3_free_table(result);
+                                result = NULL;
+                            }
+                            result = new_result;
+                            result_rows = new_rows;
+                            result_cols = new_cols;
                         }
                     }
 
-                    ImGui::EndTable();
+                    if (err_msg) {
+                        ImGui::Text("%s", err_msg);
+                    }
+
+                    if (result) {
+                        ImGui::Text("Result %d rows, %d cols", result_rows, result_cols);
+
+                        DisplayTable(result, result_rows, result_cols);
+                    }
+
+                    ImGui::EndTabItem();
                 }
+
+                if (ImGui::BeginTabItem("Tables")) {
+
+                    char **result = NULL;
+                    int rows = 0;
+                    int cols = 0;
+
+                    // which tables exist?
+                    rc = sqlite3_get_table(
+                        db,
+                        "select name from sqlite_master where type='table'",
+                        &result,
+                        &rows,
+                        &cols,
+                        &err_msg
+                        );
+                    if (rc != SQLITE_OK) {
+                        fprintf(stderr, "SQL error: %s\n", err_msg);
+                        if (result) {
+                            sqlite3_free_table(result);
+                        }
+                    }else{
+
+                        // pick a table
+                        static int selected_table_index = 0;
+                        ImGui::Combo("Table", &selected_table_index, &result[1], rows);
+
+                        static char filter[1024];
+                        ImGui::InputText("Filter", filter, sizeof(filter));
+
+                        char q[256];
+                        const char *where = filter;
+                        if (!strlen(where)) {
+                            where = "1=1";
+                        }
+                        snprintf(q, sizeof(q), "select * from %s where %s", result[selected_table_index+1], where);
+
+                        // free the list of tables
+                        sqlite3_free_table(result);
+
+                        // query the full contents of the table
+                        rc = sqlite3_get_table(
+                            db,
+                            q,
+                            &result,
+                            &rows,
+                            &cols,
+                            &err_msg
+                            );
+                        if (rc != SQLITE_OK) {
+                            fprintf(stderr, "SQL error: %s\n", err_msg);
+                            if (result) {
+                                sqlite3_free_table(result);
+                            }
+                        }else{
+                            ImGui::Text("%d rows, %d cols", rows, cols);
+
+                            DisplayTable(result, rows, cols);
+                            sqlite3_free_table(result);
+                        }
+                    }
+
+
+                    ImGui::EndTabItem();
+                }
+
+                ImGui::EndTabBar();
             }
 
             ImGui::End();
