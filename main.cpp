@@ -190,13 +190,13 @@ int main(int argc, char**argv)
     char **result = NULL;
     int result_rows = 0;
     int result_cols = 0;
-    // bool do_query_continuously = true;
 
     snprintf(query, sizeof(query), "%s", argc>2 ? argv[2] : "select * from sqlite_master");
 
     TextEditor editor;
     auto lang = TextEditor::LanguageDefinition::SQL();
     editor.SetLanguageDefinition(lang);
+    editor.SetShowWhitespaces(false);
     TextEditor::Palette palette = TextEditor::GetLightPalette();
     // disable the current line highlight, by choosing transparent colors for it.
     palette[(int)TextEditor::PaletteIndex::CurrentLineFill] = 0x00000000;
@@ -246,15 +246,6 @@ int main(int argc, char**argv)
 
                 if (ImGui::BeginTabItem("SQL")) {
 
-                    // ImGuiInputTextFlags flags = do_query_continuously ? 0 : ImGuiInputTextFlags_EnterReturnsTrue;
-                    // if (ImGui::InputText("SQL", query, sizeof(query), flags)) {
-                    //     do_query = true;
-                    // }
-                    // if (ImGui::IsItemDeactivatedAfterEdit()) {
-                    //     ImGui::SetKeyboardFocusHere(-1);
-                    // }
-                    // ImGui::SameLine();
-
                     ImVec2 size(
                         ImGui::GetContentRegionAvail().x - 100,
                         ImGui::GetTextLineHeight() * 5
@@ -280,7 +271,6 @@ int main(int argc, char**argv)
                         do_query = true;
                     }
 
-                    editor.SetShowWhitespaces(true);
                     auto cpos = editor.GetCursorPosition();
                     auto selection = editor.GetSelectedText();
                     char info_text[1024];
@@ -303,14 +293,6 @@ int main(int argc, char**argv)
                     ImGui::TextUnformatted(info_text);
                     // ImGui::SetItemAllowOverlap();
                     ImGui::SetCursorPos(pos);
-
-                    // ImGui::Checkbox("Automatic", &do_query_continuously);
-                    // if (!do_query_continuously) {
-                    //     ImGui::SameLine();
-                    //     if (ImGui::Button("Run Query")) {
-                    //         do_query = true;
-                    //     }
-                    // }
 
                     if (do_query) {
                         if (err_msg) {
