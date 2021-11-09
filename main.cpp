@@ -247,7 +247,7 @@ int main(int argc, char**argv)
                 if (ImGui::BeginTabItem("SQL")) {
 
                     ImVec2 size(
-                        ImGui::GetContentRegionAvail().x - 100,
+                        ImGui::GetContentRegionAvail().x - 100 - style.FramePadding.x,
                         ImGui::GetTextLineHeight() * 5
                         );
                     editor.Render("SQL", size, true);
@@ -473,6 +473,7 @@ int main(int argc, char**argv)
                                 record_index = 1;
                             }
 
+                            ImGui::AlignTextToFramePadding();
                             ImGui::Text("Record %d of %d", record_index, rows);
                             ImGui::SameLine();
                             if (ImGui::Button("Prev")) {
@@ -484,15 +485,13 @@ int main(int argc, char**argv)
                                 record_index++;
                                 if (record_index>rows) record_index=1;
                             }
-                            ImGui::SameLine();
+
                             ImGui::SliderInt("Record Index", &record_index, 1, rows);
 
                             ImGuiTableFlags flags = 0
                             | ImGuiTableFlags_Borders
-                            //ImGuiTableFlags_BordersOuter
                             | ImGuiTableFlags_RowBg
                             | ImGuiTableFlags_Resizable
-                        // | ImGuiTableFlags_Sortable  // we would have to sort the data ourselves
                             | ImGuiTableFlags_ScrollY
                             ;
                             if (ImGui::BeginTable("Record", 2, flags))
