@@ -16,26 +16,25 @@
 
 EXE = sql-gui
 SOURCES = main.cpp
-SOURCES += imgui/examples/imgui_impl_sdl.cpp imgui/examples/imgui_impl_opengl3.cpp
+SOURCES += imgui/backends/imgui_impl_sdl2.cpp imgui/backends/imgui_impl_opengl3.cpp
 SOURCES += imgui/imgui.cpp imgui/imgui_demo.cpp imgui/imgui_draw.cpp imgui/imgui_widgets.cpp imgui/imgui_tables.cpp
 SOURCES += ImGuiColorTextEdit/TextEditor.cpp
 SOURCES += sqlite/sqlite3.c
 OBJS = $(addsuffix .o, $(basename $(notdir $(SOURCES))))
 UNAME_S := $(shell uname -s)
 
-CFLAGS = -I./imgui/examples/ -I./imgui/ -I./imgui/backends -I./sqlite
+CFLAGS = -I./imgui/ -I./imgui/backends -I./sqlite
 CFLAGS += -g -Wall -Wformat
 LIBS =
 
-CXXFLAGS = -std=c++11 $(CFLAGS)
+CXXFLAGS = -std=c++17 $(CFLAGS)
 
 ##---------------------------------------------------------------------
 ## OPENGL LOADER
 ##---------------------------------------------------------------------
 
-## Using OpenGL loader: gl3w [default]
-SOURCES += imgui/examples/libs/gl3w/GL/gl3w.c
-CFLAGS += -Iimgui/examples/libs/gl3w -DIMGUI_IMPL_OPENGL_LOADER_GL3W
+## Using OpenGL loader: imgui's built-in loader (default since 1.91+)
+## No external loader needed - imgui_impl_opengl3.cpp includes its own loader.
 
 ## Using OpenGL loader: glew
 ## (This assumes a system-wide installation)
@@ -89,20 +88,11 @@ endif
 %.o:ImGuiColorTextEdit/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-%.o:imgui/examples/%.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
 %.o:imgui/backends/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 %.o:imgui/%.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-
-%.o:imgui/examples/libs/gl3w/GL/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-%.o:imgui/examples/libs/glad/src/%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o:sqlite/%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
